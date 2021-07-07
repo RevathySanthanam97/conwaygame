@@ -4,12 +4,14 @@ var reset = document.getElementById('reset');
 var random = document.getElementById('random');
 var ctx = canvas.getContext('2d');
 const resolution = 25;
-canvas.width = 500;
-canvas.height = 500;
-var generation = 0;
+canvas.width = resolution*resolution;
+canvas.height = resolution*resolution;
 var grid, select = false, isRunning=false;
+var generation = 0;
 const COLS = resolution;
 const ROWS = resolution;
+var getRowVal,getColVal;
+var values = [];
 
 function buildGrid() {
   return new Array(COLS).fill(0).map(() => new Array(ROWS).fill(0));
@@ -26,7 +28,10 @@ function handleClick(e){
     Math.floor(e.offsetY / resolution) * resolution,
     resolution, resolution);
     grid[Math.floor(e.offsetX/resolution)][Math.floor(e.offsetY/resolution)] = 1;
-    console.log(Math.floor(e.offsetX/resolution)+1,Math.floor(e.offsetY/resolution)+1)
+    console.log(Math.floor(e.offsetX/resolution),Math.floor(e.offsetY/resolution))
+    getRowVal = Math.floor(e.offsetX/resolution)+1;
+    getColVal = Math.floor(e.offsetY/resolution)+1;
+    values.push([getRowVal,getColVal])
     render(grid);
 }
 
@@ -40,7 +45,9 @@ function handleStart(e){
 }
 
 function handleReset(){
-    isRunning = false;
+    // isRunning = false;
+    // cancelAnimationFrame(update(grid))
+    // canvas.style.pointerEvents = "auto";
     window.location.reload().preventDefault();
 }
 
@@ -48,7 +55,6 @@ function render(grid) {
   for (let col = 0; col < grid.length; col++) {
     for (let row = 0; row < grid[col].length; row++) {
       const cell = grid[col][row];
-     
       ctx.beginPath();
       ctx.rect(col * resolution, row * resolution, resolution, resolution);
       ctx.fillStyle = cell ? 'black' : 'white';
@@ -58,8 +64,8 @@ function render(grid) {
   }
 }
 
-function nextGen(grid){
-    generation ++;
+function nextGen(grid, rowNum, colNum){
+  generation++;
     const nextGen = grid.map(arr => [...arr]);
     for (let col = 0; col < grid.length; col++) {
         for (let row = 0; row < grid[col].length; row++) {
@@ -78,6 +84,20 @@ function nextGen(grid){
                   }
               }
           }
+          if(row==rowNum && col==colNum){
+            if(select){
+              if(generation<6){
+                console.log("only 5 generation values are printer to avoid browser crash")
+                values.map((val)=>{
+                  console.log("Generation: "+generation+"; ("+val[0]+","+val[1]+") = Neighbours: "+neighbours)
+                })
+              }
+            }
+            else{
+              console.warn("Closetab to avoid browser crash")
+              console.log("Generation: "+generation+"; ("+rowNum+","+colNum+") = Neighbours: "+neighbours)
+            } 
+          }
           if(cell === 1 && neighbours < 2){
               nextGen[col][row] = 0;
           }
@@ -87,7 +107,9 @@ function nextGen(grid){
           else if(cell === 0 && neighbours === 3){
             nextGen[col][row] = 1;
           }
+          
         }
+        
     }
     return nextGen;
 }
@@ -98,11 +120,13 @@ function nextGen(grid){
 
 
 // functions
-canvas.addEventListener('click', handleClick);
+  canvas.addEventListener('click', handleClick);
 start.addEventListener('click', handleStart);
 reset.addEventListener('click', handleReset);
 random.addEventListener('click', function(){
   if(!(isRunning)){
+    canvas.style.pointerEvents = "none";
+    console.log('To know number of neighbours give row and col inputs as getRowVal and getColVal in console');
     var grid1 = handleRandom();
     render(grid1);
     window.requestAnimationFrame(function(){
@@ -113,9 +137,8 @@ random.addEventListener('click', function(){
 });
 
 
-
 function update(grid){
-    grid = nextGen(grid);
+    grid = nextGen(grid, getRowVal, getColVal);
     render(grid);
     window.requestAnimationFrame(function(){
       update(grid)
