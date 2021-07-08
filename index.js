@@ -80,7 +80,6 @@ function nextGen(grid, rowNum, colNum){
               }
           }
           if(cell && generation<2){
-            console.log("Click on reset to refresh")
             console.log("Generation: "+generation+"; ("+row+","+col+") = Neighbours: "+ neighbours)
           }    
           if(cell === 1 && neighbours < 2){
